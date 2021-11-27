@@ -1,12 +1,14 @@
 const express = require("express");
 const app = express();
 const fileUpload = require("express-fileupload");
-const { mkdirSync } = require("fs");
 const { join } = require("path");
 const { exec } = require("child_process");
+const fs = require("fs");
+
 require("dotenv/config");
 
 app.use(fileUpload({ createParentPath: true, useTempFiles: true }));
+app.enable("trust proxy");
 
 const randomId = () =>
   Math.random()
@@ -17,7 +19,7 @@ const randomId = () =>
     .join("");
 
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
+  res.sendFile(join(__dirname, "index.html"));
 });
 
 app.post("/merge", async (req, res) => {
@@ -71,24 +73,48 @@ app.post("/merge", async (req, res) => {
 
     const merge = () => {
       const outputId = randomId();
-      const outputPath = join(__dirname, "output", outputId + ".mp4");
+      const outputPath = join(__dirname, "output", outputId, "output.mp4");
 
-      mkdirSync("output", { recursive: true });
+      res.send({
+        message: "File uploaded! Conversion will begin shortly",
+        url: `${req.protocol}://${req.get(
+          "host"
+        )}/download?outputId=${outputId}`,
+      });
+
+      fs.mkdirSync(join(__dirname, "output", outputId), { recursive: true });
 
       const command = `ffmpeg -i ${videoFilePath} -i ${audioFilePath} -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 ${outputPath}`;
 
-      exec(command, (error, stdout, stderr) => {
+      exec(command, (error) => {
         if (error) {
           console.log("Convert error: ", error);
-          if (!res.headersSent) return res.status(500).send(error);
         }
-
-        res.download(outputPath);
       });
     };
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "File upload failed", error });
+  }
+});
+
+app.get("/download", (req, res) => {
+  try {
+    const { outputId } = req.query;
+
+    const exist = fs.existsSync(
+      join(__dirname, "output", outputId, "output.mp4")
+    );
+
+    if (!exist)
+      return res.send({
+        message: "File is being processed",
+      });
+
+    res.download(join(__dirname, "output", outputId, "output.mp4"));
+  } catch (error) {
+    console.log(error);
+    if (!res.headerSent) res.sendStatus(500);
   }
 });
 

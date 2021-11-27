@@ -1,17 +1,12 @@
 const express = require("express");
 const app = express();
 const fileUpload = require("express-fileupload");
-const cors = require("cors");
-const { mkdirSync, fstat } = require("fs");
+const { mkdirSync } = require("fs");
 const { join } = require("path");
 const { exec } = require("child_process");
 require("dotenv/config");
 
-app.use(cors({ origin: true, credentials: true }));
 app.use(fileUpload({ createParentPath: true, useTempFiles: true }));
-app.enable("trust proxy");
-
-app.set("json spaces", 2);
 
 const randomId = () =>
   Math.random()

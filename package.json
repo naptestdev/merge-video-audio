@@ -4,15 +4,13 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1"
   },
-  "devDependencies": {},
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node .",
+    "dev": "nodemon ."
   },
   "keywords": [],
   "author": "",

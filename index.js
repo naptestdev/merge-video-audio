@@ -10,6 +10,8 @@ require("dotenv/config");
 app.use(fileUpload({ createParentPath: true, useTempFiles: true }));
 app.enable("trust proxy");
 
+let finished = [];
+
 const randomId = () =>
   Math.random()
     .toString(36)
@@ -90,6 +92,8 @@ app.post("/merge", async (req, res) => {
         if (error) {
           console.log("Convert error: ", error);
         }
+
+        finished.push(outputId);
       });
     };
   } catch (error) {
@@ -102,9 +106,7 @@ app.get("/download", (req, res) => {
   try {
     const { outputId } = req.query;
 
-    const exist = fs.existsSync(
-      join(__dirname, "output", outputId, "output.mp4")
-    );
+    const exist = finished.includes(outputId);
 
     if (!exist)
       return res.send({
